@@ -1,6 +1,7 @@
 ﻿using Photogram.Data;
 using Photogram.Entities;
 using Photogram.Service;
+using System.Text.RegularExpressions;
 
 namespace ToDoList.Service
 {
@@ -26,8 +27,11 @@ namespace ToDoList.Service
 
         public async ValueTask<User> CreateAsync(User user, bool SaveChanges = true, CancellationToken cancellationToken = default)
         {
-           // if (IsExist(user))
-             //   throw new Exception("This user is exist");
+            if (!IsValidUser(user))
+                throw new ArgumentException("Invalid user.");
+
+            if (IsExist(user))
+                throw new ArgumentException("This user already exists");
 
             var entity = await _dataContext.Users.AddAsync(user);
 
@@ -74,6 +78,27 @@ namespace ToDoList.Service
             await _dataContext.SaveChangesAsync();
 
             return user;
+        }
+
+        private bool IsValidUser(User user)
+        {
+            if (string.IsNullOrWhiteSpace(user.Firstname) || string.IsNullOrWhiteSpace(user.Lastname))
+                return false;
+
+            if (user.Password.Length < 8)
+                return false;
+
+            if (!IsValidEmailAddress(user.Email))
+                return false;
+
+            return true;
+        }
+
+        private bool IsValidEmailAddress(string emailAddress)
+        {
+            var pattern = @"^[a-zA-Z]{4,}[a-zA-Z0-9]*(\.[a-zA-Z0-9]{4,})*@[a-zA-Z0-9]{4,}\.[a-zA-Z]{2,}[a-zA-Z]*$";
+
+            return Regex.IsMatch(emailAddress, pattern);
         }
     }
 }
