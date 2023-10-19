@@ -9,5 +9,6 @@ namespace Photogram.Service
         ValueTask<string> SaveImageAsync(Guid user, IFormFile image);
 
         ValueTask<bool> DeleteAsync(string imageName);
+        public bool DeleteUserFolder(Guid userId);
     }
 }
