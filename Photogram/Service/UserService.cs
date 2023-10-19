@@ -2,6 +2,7 @@
 using Photogram.Entities;
 using Photogram.Service;
 using System.Text.RegularExpressions;
+using System.Xml.Linq;
 
 namespace ToDoList.Service
 {
@@ -49,9 +50,17 @@ namespace ToDoList.Service
             await _dataContext.Users.RemoveAsync(user);
             await _dataContext.SaveChangesAsync();
 
+            _fileService.DeleteUserFolder(userId: user.Id);
+
             return user;
         }
 
+        public ValueTask<ICollection<User>> GetAsync(IEnumerable<Guid> ids, CancellationToken cancellationToken = default)
+        {
+            var users = _dataContext.Users.
+                Where(user => ids.Contains(user.Id));
+            return new ValueTask<ICollection<User>>(users.ToList());
+        }
         public ValueTask<ICollection<User>> Get(CancellationToken cancellationToken = default)
         {
             throw new NotImplementedException();
@@ -59,12 +68,21 @@ namespace ToDoList.Service
 
         public ValueTask<User> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
         {
-            throw new NotImplementedException();
+            return new ValueTask<User>(_dataContext.Users.
+                FirstOrDefault(comment => comment.Id == id) ??
+                throw new Exception("Comment not found!"));
         }
 
-        public ValueTask<User> UpdateAsync(Guid id, User user, bool SaveChanges = true, CancellationToken cancellationToken = default)
+        public async ValueTask<User> UpdateAsync(Guid id, User user, bool SaveChanges = true, CancellationToken cancellationToken = default)
         {
-            throw new NotImplementedException();
+            var findUser = await _dataContext.Users.FindAsync(id, cancellationToken);
+
+            if (user == null || findUser is null) throw new Exception();
+
+            await _dataContext.Users.UpdateAsync(findUser);
+            await _dataContext.SaveChangesAsync();
+
+            return user;
         }
 
         public async ValueTask<User> UploadImageAsync(Guid id, UploadImageDTO imageDTO, bool SaveChanges = true, CancellationToken cancellationToken = default)

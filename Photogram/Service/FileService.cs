@@ -5,7 +5,7 @@
         private readonly string _folderName = "images";
         private readonly string _basePath;
 
-       public FileService(IWebHostEnvironment webHost)
+        public FileService(IWebHostEnvironment webHost)
         {
             _basePath = webHost.WebRootPath;
         }
@@ -30,14 +30,14 @@
         public async ValueTask<string> SaveImageAsync(Guid userId, IFormFile image)
         {
             var imagesPath = Path.Combine(_basePath, _folderName); // wwwroot/images
-            
+
             if (!Directory.Exists(_basePath))
             {
                 Directory.CreateDirectory(_basePath);
             }
 
             if (!Directory.Exists(imagesPath))
-            { 
+            {
                 Directory.CreateDirectory(imagesPath);
             }
 
@@ -57,6 +57,17 @@
             stream.Close();
 
             return imageName;
+        }
+
+        public bool DeleteUserFolder(Guid userId)
+        {
+            var allPath = Path.Combine(_basePath, _folderName, userId.ToString());
+            if (Directory.Exists(allPath))
+            {
+                Directory.Delete(allPath);
+                return true;
+            }
+            return false;
         }
     }
 }
